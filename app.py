@@ -19,7 +19,7 @@ def create_store():
             400,
             message="Please include a name for the store."
         )
-        
+
     for store in stores.values():
         if store_data["name"] == store["name"]:
             abort(400, message=f"Store is already exist")
@@ -56,10 +56,6 @@ def create_item():
     items[item_id] = item
     return item, 201
 
-@app.get("/item")
-def get_all_item():
-    return {"items": list(items.values())}
-
 @app.get("/store/<string:store_id>")
 def get_store(store_id):
     try:
@@ -73,3 +69,15 @@ def get_item(item_id):
         return items[item_id]
     except KeyError:
         return abort(404, message="item not found")
+
+@app.delete("/item/<string:item_id>")
+def delete_item(item_id):
+    try:
+        del items[item_id]
+        return {"message": "item deleted"}
+    except KeyError:
+        return abort(404, message="item not found")
+
+@app.get("/item")
+def get_all_item():
+    return {"items": list(items.values())}
