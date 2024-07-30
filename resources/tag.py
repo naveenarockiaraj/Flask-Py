@@ -3,8 +3,8 @@ from flask_smorest import Blueprint, abort
 from sqlalchemy.exc import SQLAlchemyError
 
 from db import db
-from models import TagModel, StoreModel
-from schemas import TagSchema
+from models import TagModel, StoreModel, ItemModel
+from schemas import TagSchema, TagAndItemSchema
 
 
 blp = Blueprint("Tags", "tags", description="Operations on tags")
@@ -29,7 +29,23 @@ class TagInStore(MethodView):
             abort(500, message=str(e))
 
         return tag
-    
+@blp.route("/item/<string:item_id>/tag/<string:tag_id>")
+class LinkTagsOnItem(MethodView):
+    @blp.response(200, TagAndItemSchema)
+    def get(self, item_id, tag_id):
+        item = ItemModel.query.get_or_404(item_id)
+        tag = TagModel.query.get_or_404(tag_id)
+        item.tags.append(tag)
+
+        try:
+            db.session.add(item)
+            db.session.commit()
+        except SQLAlchemyError:
+            abort(500, message="Failed to add tag to item")
+
+        return item, tag
+
+
 @blp.route("/tag/<string:tag_id>")
 class Tag(MethodView):
     @blp.response(200, TagSchema)
