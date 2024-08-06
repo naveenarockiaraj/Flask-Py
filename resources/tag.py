@@ -44,8 +44,18 @@ class LinkTagsOnItem(MethodView):
             abort(500, message="Failed to add tag to item")
 
         return item, tag
+    
+    @blp.response(200, TagAndItemSchema)
+    def delete(self, item_id, tag_id):
+        item = ItemModel.query.get_or_404(item_id)
+        tag = TagModel.query.get_or_404(tag_id)
 
-
+        item.tag.remove(tag)
+        try:
+            db.session.add(item)
+            db.session.commit()
+        except SQLAlchemyError:
+            abort(500, message="Failed to remove tag from item")
 @blp.route("/tag/<string:tag_id>")
 class Tag(MethodView):
     @blp.response(200, TagSchema)
